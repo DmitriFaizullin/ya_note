@@ -17,22 +17,16 @@ class TestRoutes(TestCase):
         cls.reader = User.objects.create(username='Фродо Бэггинс')
 
         cls.note = Note.objects.create(
-            title='Туда и обратно', text='Текст',
-            slug='tudasuda', author=cls.author)
-
-        cls.urls = {
-            'private': (
-                ('notes:add', None),
-                ('notes:list', None),
-                ('notes:success', None),
-                ('notes:edit', (cls.note.slug,)),
-                ('notes:detail', (cls.note.slug,)),
-                ('notes:delete', (cls.note.slug,)),
-            ),
-        }
+            title='Туда и обратно',
+            text='Текст',
+            slug='tudasuda',
+            author=cls.author
+        )
 
     def test_pages_availability(self):
-        for name in ('notes:home', 'users:login', 'users:logout', 'users:signup'):
+        for name in (
+            'notes:home', 'users:login', 'users:logout', 'users:signup'
+        ):
             with self.subTest(name=name):
                 url = reverse(name)
                 response = self.client.get(url)
@@ -61,7 +55,15 @@ class TestRoutes(TestCase):
 
     def test_redirect_for_anonymous_client(self):
         login_url = reverse('users:login')
-        for name, args in self.urls['private']:
+        urls = (
+            ('notes:add', None),
+            ('notes:list', None),
+            ('notes:success', None),
+            ('notes:edit', (self.note.slug,)),
+            ('notes:detail', (self.note.slug,)),
+            ('notes:delete', (self.note.slug,)),
+        )
+        for name, args in urls:
             with self.subTest(name=name):
                 url = reverse(name, args=args)
                 redirect_url = f'{login_url}?next={url}'

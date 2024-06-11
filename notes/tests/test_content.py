@@ -8,37 +8,17 @@ from notes.forms import NoteForm
 User = get_user_model()
 
 
-class TestNotesList(TestCase):
-    NOTES_LIST_URL = reverse('notes:list')
-
+class TestContent(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.author = User.objects.create(username='Бильбо Бэггинс')
-        all_notes = [
-            Note(
-                title=f'Запись {index}',
-                text='Текст.',
-                slug=f'Zapis_{index}',
-                author=cls.author
-            )
-            for index in range(2)
-        ]
-        Note.objects.bulk_create(all_notes)
+        cls.reader = User.objects.create(username='Фродо Бэггинс')
 
-    def test_notes_order(self):
-        self.client.force_login(self.author)
-        response = self.client.get(self.NOTES_LIST_URL)
-        object_list = response.context['object_list']
-        all_id = [note.id for note in object_list]
-        sorted_id = sorted(all_id)
-        self.assertEqual(all_id, sorted_id)
+        cls.note_in_list = (
+            (cls.author, True),
+            (cls.reader, False),
+        )
 
-
-class TestHasForm(TestCase):
-
-    @classmethod
-    def setUpTestData(cls):
-        cls.author = User.objects.create(username='Бильбо Бэггинс')
         cls.note = Note.objects.create(
             title='Запись',
             text='Текст.',
@@ -49,6 +29,14 @@ class TestHasForm(TestCase):
             reverse('notes:add'),
             reverse('notes:edit', args=(cls.note.slug,))
         }
+
+    def test_note_in_object_list(self):
+        for user, status in self.note_in_list:
+            self.client.force_login(user)
+            with self.subTest(user=user):
+                response = self.client.get(reverse('notes:list'))
+                object_list = response.context['object_list']
+                self.assertEqual((self.note in object_list), status)
 
     def test_page_has_form(self):
         self.client.force_login(self.author)
